@@ -32,7 +32,7 @@ function Home() {
 
       <div className="grid-features">
         {features.map((f) => (
-          <FeatureCard key={f.title} icon={f.icon} title={f.title} description={f.desc} />
+          <FeatureCard key={f.title} icon={f.icon} title={f.title} desc={f.desc} />
         ))}
       </div>
     </section>
