@@ -2,7 +2,7 @@
 
 Plataforma web para limpiar, procesar y visualizar datos usando **Pandas**, **NumPy** y **Matplotlib**, directamente desde el navegador sin instalar Python.
 
-**URL del proyecto:** https://python-xi-six.vercel.app
+**URL del proyecto:** [https://python-xi-six.vercel.app](https://python-senati-vercel.vercel.app/)
 
 ---
 
@@ -48,7 +48,7 @@ Registro → Verificacion por correo → Login → Dashboard → Cargar CSV → 
 
 | Servicio | URL |
 |----------|-----|
-| **Frontend (Vercel)** | https://python-xi-six.vercel.app |
+| **Frontend (Vercel)** | [https://python-xi-six.vercel.app](https://python-senati-vercel.vercel.app/) |
 | **Repositorio GitHub** | https://github.com/PolloCraft/proyecto-phyton-senati |
 
 > **Nota:** El backend se ejecuta localmente en `http://localhost:3001`. Sin backend, el login funciona en modo desarrollo (los codigos se muestran en pantalla).
