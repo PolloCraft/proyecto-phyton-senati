@@ -1,0 +1,230 @@
+/* ==========================================
+   DASHBOARD - Top Bar (centered layout)
+   ========================================== */
+.dashboard-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.dashboard-topbar-center {
+  text-align: center;
+  flex: 1;
+}
+
+/* ==========================================
+   DASHBOARD - Navigation
+   ========================================== */
+.dashboard-nav {
+  margin-bottom: 32px;
+}
+
+/* ==========================================
+   DASHBOARD - Stats Row
+   ========================================== */
+.dashboard-stats-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  justify-content: center;
+}
+
+/* ==========================================
+   DASHBOARD - Card Header (title + button)
+   ========================================== */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.card-header h3 {
+  margin: 0;
+}
+
+/* ==========================================
+   DASHBOARD - Table Wrapper
+   ========================================== */
+.table-wrapper {
+  max-height: 300px;
+  overflow: auto;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+
+/* ==========================================
+   DASHBOARD - Tables
+   ========================================== */
+.card table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.card table th {
+  background: #2c3e50;
+  color: #fff;
+  padding: 8px 12px;
+  border: 1px solid #34495e;
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.card table td {
+  padding: 6px 12px;
+  border: 1px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.card table tr:nth-child(even) {
+  background: #f8f9fa;
+}
+
+/* ==========================================
+   DASHBOARD - Form Controls
+   ========================================== */
+.card select {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  font-size: 0.9rem;
+  background: #fff;
+  color: #1e293b;
+  cursor: pointer;
+}
+
+.card select:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+.card input[type="file"] {
+  font-size: 0.9rem;
+  padding: 4px;
+}
+
+/* ==========================================
+   DASHBOARD - Result Panel
+   ========================================== */
+.result-panel {
+  background: #1e293b;
+  color: #e2e8f0;
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 16px;
+  overflow-x: auto;
+}
+
+.result-panel pre {
+  margin: 0;
+  font-size: 13px;
+  font-family: monospace;
+  white-space: pre-wrap;
+}
+
+/* ==========================================
+   DASHBOARD - Checkbox Labels
+   ========================================== */
+.matrix-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  cursor: pointer;
+  font-size: 13px;
+  background: #fff;
+  transition: background 0.15s;
+}
+
+.matrix-checkbox.checked {
+  background: #eef2ff;
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+/* ==========================================
+   DASHBOARD - Chart Container
+   ========================================== */
+.chart-container {
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+.chart-container img {
+  width: 100%;
+  border-radius: 8px;
+}
+
+.chart-stats {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+  justify-content: center;
+}
+
+/* ==========================================
+   DASHBOARD - Loading / Empty State
+   ========================================== */
+.dashboard-loading {
+  padding: 20px;
+  text-align: center;
+  color: #6366f1;
+  font-weight: bold;
+}
+
+.dashboard-empty {
+  padding: 15px;
+  background: #fef9e7;
+  border-left: 5px solid #f39c12;
+  border-radius: 5px;
+}
+
+.dashboard-empty p {
+  color: #7d6608;
+  margin: 0;
+}
+
+/* ==========================================
+   RESPONSIVE - DASHBOARD MOBILE (<=640px)
+   ========================================== */
+@media (max-width: 640px) {
+  .dashboard-topbar {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .dashboard-topbar-center {
+    order: -1;
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dashboard-stats-row {
+    gap: 8px;
+  }
+
+  .btn-row {
+    gap: 8px;
+  }
+
+  .chart-stats {
+    gap: 8px;
+  }
+}
