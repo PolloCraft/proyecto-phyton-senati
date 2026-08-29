@@ -1,0 +1,51 @@
+id_producto,producto,categoria,precio,cantidad,fecha_venta,cliente,ciudad,metodo_pago,estado
+1,Laptop HP Pavilion,Computadoras,2499.99,5,2026-01-15,Luis Martinez,Lima,Tarjeta Credito,Completado
+2,Mouse Logitech MX,Perifericos,89.90,12,2026-01-16,Ana Garcia,Lima,Efectivo,Completado
+3,Teclado Mecanico Corsair,Perifericos,,8,2026-01-16,Carlos Rodriguez,Arequipa,Tarjeta Debito,Completado
+4,Monitor Samsung 27,Monitores,1899.00,,2026-01-17,Maria Lopez,Cusco,Tarjeta Credito,Pendiente
+5,Auriculares Sony WH,Audio,599.90,15,2026-01-18,,Lima,Efectivo,Completado
+6,Cargador USB-C Universal,Accesorios,45.50,25,2026/01/19,Roberto Sanchez,Trujillo,Tarjeta Debito,Completado
+7,Laptop Dell Inspiron,Computadoras,,3,2026-01-20,Luis Martinez,Lima,Tarjeta Credito,Completado
+8,Webcam Logitech C920,Perifericos,329.99,10,2026-01-21,Ana Garcia,,Transferencia,Completado
+9,Disco Duro SSD 1TB,Almacenamiento,389.00,20,2026-01-22,Carlos Rodriguez,Arequipa,,Completado
+10,Impresora Canon PIXMA,Impresoras,679.00,4,2026-01-23,febrero,Lima,Efectivo,Completado
+11,Router TP-Link AC1200,Red,189.90,18,2026-01-24,Roberto Sanchez,Trujillo,Tarjeta Debito,Cancelado
+12,Tablet Samsung Galaxy,Computadoras,1299.00,6,,Maria Lopez,Cusco,Tarjeta Credito,Completado
+13,Parlante JBL Flip 6,Audio,449.90,14,2026-01-26,Diego Torres,Lima,Efectivo,Completado
+14,SSD Kingston 500GB,Almacenamiento,219.00,0,2026-01-27,Ana Garcia,Lima,Tarjeta Debito,Completado
+15,Monitor LG UltraWide,Monitores,2499.00,2,2026-01-28,Carlos Rodriguez,,Tarjeta Credito,Completado
+16,Teclado Inalámbrico Apple,Perifericos,599.00,7,2026-01-29,n/a,Arequipa,Transferencia,Pendiente
+17,Cable HDMI 2.1 2m,Accesorios,35.00,50,2026-01-30,Luis Martinez,Lima,Efectivo,Completado
+18,Laptop Lenovo ThinkPad,Computadoras,3299.00,3,2026/02/01,Roberto Sanchez,Trujillo,Tarjeta Credito,Completado
+19,Mousepad RGB XXL,Perifericos,79.90,22,2026-02-02,Ana Garcia,Lima,,Completado
+20,Hub USB 7 puertos,Accesorios,65.00,30,2026-02-03,Carlos Rodriguez,Arequipa,Tarjeta Debito,Completado
+21,Webcam HD 1080p,Perifericos,199.99,9,2026-02-04,,Cusco,Efectivo,Completado
+22,Auriculares Bluetooth JBL,Audio,349.90,11,2026-02-05,Diego Torres,Lima,Tarjeta Credito,Completado
+23,Disco Duro Externo 2TB,Almacenamiento,499.00,8,2026-02-06,febrero,Trujillo,Tarjeta Debito,Completado
+24,Impresora HP LaserJet,Impresoras,1599.00,2,2026-02-07,Ana Garcia,Lima,Transferencia,Completado
+25,Switch Gigabit 8 Puertos,Red,129.90,16,2026-02-08,Carlos Rodriguez,Arequipa,Efectivo,Completado
+26,Laptop ASUS ROG,Computadoras,4999.00,1,2026-02-09,Luis Martinez,,Tarjeta Credito,Completado
+27,Parlante Bose SoundLink,Audio,1299.00,5,2026-02-10,Roberto Sanchez,Trujillo,Tarjeta Credito,Completado
+28,Microfono Blue Yeti,Audio,899.00,4,2026-02-11,Diego Torres,Lima,Efectivo,Completado
+29,Silla Gamer Secretlab,Accesorios,1899.00,3,2026-02-12,n/a,Cusco,Tarjeta Credito,Pendiente
+30,Escritorio Ergonomico,Accesorios,999.00,6,2026-02-13,Ana Garcia,Lima,Transferencia,Completado
+31,Laptop Acer Nitro,Computadoras,2799.00,4,2026-02-14,Carlos Rodriguez,Arequipa,Tarjeta Debito,Completado
+32,Monitor Dell 24 LED,Monitores,1199.00,7,2026-02-15,Luis Martinez,Lima,Tarjeta Credito,Completado
+33,Teclado Razer Huntsman,Perifericos,799.00,9,2026-02-16,febrero,Trujillo,Efectivo,Completado
+34,Mouse Gaming Logitech,Perifericos,249.90,13,2026-02-17,Diego Torres,Lima,Tarjeta Debito,Completado
+35,Cable USB-C a Lightning,Accesorios,29.90,40,2026-02-18,Ana Garcia,Lima,Efectivo,Completado
+36,SSD NVMe 1TB Samsung,Almacenamiento,699.00,10,2026-02-19,Carlos Rodriguez,,Tarjeta Credito,Completado
+37,Router ASUS RT-AX86U,Red,599.00,6,2026-02-20,Luis Martinez,Lima,Transferencia,Completado
+38,Webcam Razer Kiyo Pro,Perifericos,499.99,5,2026-02-21,Roberto Sanchez,Trujillo,Tarjeta Debito,Completado
+39,Auriculares AirPods Pro,Audio,999.00,8,2026-02-22,Ana Garcia,Lima,Tarjeta Credito,Completado
+40,Laptop MacBook Air M3,Computadoras,5499.00,2,2026-02-23,Diego Torres,,Tarjeta Credito,Completado
+41,Impresora Epson EcoTank,Impresoras,899.00,5,2026-02-24,Carlos Rodriguez,Arequipa,Efectivo,Completado
+42,Monitor ASUS ProArt,Monitores,3299.00,2,2026-02-25,Luis Martinez,Lima,Tarjeta Credito,Completado
+43,Parlante Sony SRS-XB43,Audio,699.00,7,2026-02-26,Roberto Sanchez,Trujillo,Tarjeta Debito,Completado
+44,Disco Duro SSD 2TB,Almacenamiento,899.00,4,2026-02-27,Ana Garcia,Lima,Transferencia,Completado
+45,Teclado Logitech Ergo K860,Perifericos,449.00,11,2026-02-28,Diego Torres,Lima,Efectivo,Completado
+46,Cable DisplayPort 1.4,Accesorios,42.00,35,2026-03-01,Carlos Rodriguez,Arequipa,Tarjeta Debito,Completado
+47,Laptop MSI Creator,Computadoras,6299.00,1,2026-03-02,Luis Martinez,Lima,Tarjeta Credito,Completado
+48,Hub Thunderbolt 4,Accesorios,349.00,8,2026-03-03,febrero,Trujillo,Efectivo,Completado
+49,Mouse Vertical Logitech,Perifericos,129.90,15,2026-03-04,Ana Garcia,Lima,Tarjeta Debito,Completado
+50,Switch Manageable Cisco,Red,2499.00,3,2026-03-05,Diego Torres,Cusco,Tarjeta Credito,Completado

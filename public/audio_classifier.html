@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clasificar Audios</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #f8fafc; color: #1e293b; padding: 2rem; }
+    .container { max-width: 600px; margin: 0 auto; text-align: center; }
+    h1 { font-size: 1.4rem; font-weight: 700; margin-bottom: 0.4rem; color: #0f172a; }
+    p.subtitle { color: #64748b; margin-bottom: 1.5rem; font-size: 0.92rem; }
+    .btn-group { display: flex; gap: 10px; justify-content: center; margin-bottom: 1.5rem; }
+    .tm-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 28px;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 150ms ease;
+    }
+    .tm-btn-start {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    }
+    .tm-btn-start:hover { box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4); transform: translateY(-1px); }
+    .tm-btn-stop {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+    }
+    .tm-btn-stop:hover { box-shadow: 0 4px 16px rgba(239, 68, 68, 0.4); transform: translateY(-1px); }
+    .tm-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    #label-container { margin-top: 1rem; text-align: left; }
+    #label-container div { padding: 0.6rem 0; border-bottom: 1px solid #e2e8f0; font-size: 0.92rem; color: #334155; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Teachable Machine Audio Model</h1>
+    <p class="subtitle">Clasifica sonidos en tiempo real con IA</p>
+
+    <div class="btn-group">
+      <button type="button" id="btn-start" class="tm-btn tm-btn-start" onclick="handleClick()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Iniciar
+      </button>
+      <button type="button" id="btn-stop" class="tm-btn tm-btn-stop" onclick="handleStop()" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px"><rect x="6" y="6" width="12" height="12"/></svg>
+        Detener
+      </button>
+    </div>
+
+    <div id="label-container"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.3.1/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/speech-commands@0.4.0/dist/speech-commands.min.js"></script>
+
+  <script type="text/javascript">
+    const URL = window.location.origin + "/audio_model/";
+    let recognizer = null;
+    let running = false;
+
+    async function createModel() {
+      const checkpointURL = URL + "model.json";
+      const metadataURL = URL + "metadata.json";
+      const rec = speechCommands.create("BROWSER_FFT", undefined, checkpointURL, metadataURL);
+      await rec.ensureModelLoaded();
+      return rec;
+    }
+
+    async function handleClick() {
+      const btnStart = document.getElementById("btn-start");
+      const btnStop = document.getElementById("btn-stop");
+      btnStart.disabled = true;
+
+      try {
+        recognizer = await createModel();
+        const classLabels = recognizer.wordLabels();
+        const labelContainer = document.getElementById("label-container");
+        labelContainer.innerHTML = "";
+        for (let i = 0; i < classLabels.length; i++) {
+          labelContainer.appendChild(document.createElement("div"));
+        }
+
+        recognizer.listen(result => {
+          const scores = result.scores;
+          for (let i = 0; i < classLabels.length; i++) {
+            const classPrediction = classLabels[i] + ": " + result.scores[i].toFixed(2);
+            labelContainer.childNodes[i].innerHTML = classPrediction;
+          }
+        }, {
+          includeSpectrogram: true,
+          probabilityThreshold: 0.75,
+          invokeCallbackOnNoiseAndUnknown: true,
+          overlapFactor: 0.50
+        });
+
+        running = true;
+        btnStart.disabled = true;
+        btnStart.style.display = "none";
+        btnStop.disabled = false;
+      } catch (e) {
+        console.error("Error:", e);
+        btnStart.disabled = false;
+      }
+    }
+
+    function handleStop() {
+      if (recognizer && running) {
+        recognizer.stopListening();
+        running = false;
+      }
+      const btnStart = document.getElementById("btn-start");
+      const btnStop = document.getElementById("btn-stop");
+      btnStop.disabled = true;
+      btnStop.style.display = "none";
+      btnStart.style.display = "inline-flex";
+      btnStart.disabled = false;
+    }
+  </script>
+</body>
+</html>

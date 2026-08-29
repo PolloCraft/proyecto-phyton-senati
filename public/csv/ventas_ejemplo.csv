@@ -1,0 +1,21 @@
+num_venta,producto,cantidad,precio_unitario,total,fecha,cliente,region,canal,estado_venta
+1001,Laptop HP,2,2499.99,,01/15/2026,Luis M.,Sur,Tienda Fisica,Activo
+1002,Mouse Logitech,5,89.90,449.50,2026-01-16,Ana G.,Norte,Online,Activo
+1003,Teclado Corsair,3,abc,2697.00,2026-01-17,Carlos R.,Centro,,Activo
+1004,Monitor Samsung,1,1899.00,1899.00,2026-01-18,,Sur,Tarjeta,Completado
+1005,Auriculares Sony,4,599.90,2399.60,2026-01-19,febrero,Norte,Online,Completado
+1006,Cargador USB-C,10,45.50,455.00,2026/01/20,Roberto S.,Centro,Efectivo,
+1007,Laptop Dell,2,2899.00,5798.00,2026-01-21,Luis M.,Sur,Tienda Fisica,Completado
+1008,Webcam Logitech,6,329.99,,2026-01-22,Ana G.,Norte,Online,Completado
+1009,SSD 1TB,8,389.00,3112.00,2026-01-23,Carlos R.,Centro,,Pendiente
+1010,Impresora Canon,1,679.00,,2026-01-24,Diego T.,Sur,Tarjeta,Activo
+1011,Router TP-Link,12,189.90,2278.80,2026-01-25,Roberto S.,Norte,Online,
+1012,Tablet Samsung,2,1299.00,2598.00,2026-01-26,Luis M.,Centro,Efectivo,Completado
+1013,Parlante JBL,7,449.90,3149.30,2026-01-27,Ana G.,Sur,Tienda Fisica,Completado
+1014,SSD Kingston,0,219.00,0.00,2026-01-28,Carlos R.,Norte,Online,Completado
+1015,Monitor LG,3,2499.00,,2026-01-29,Diego T.,Centro,Tarjeta,Completado
+1016,Teclado Apple,2,599.00,1198.00,2026-01-30,n/a,Sur,Efectivo,
+1017,Cable HDMI,20,35.00,700.00,2026-01-31,Luis M.,Norte,Online,Completado
+1018,Laptop Lenovo,1,3299.00,3299.00,2026/02/01,Roberto S.,Centro,Tarjeta,Completado
+1019,Mousepad RGB,15,79.90,,2026-02-02,Ana G.,Sur,Tienda Fisica,Completado
+1020,Hub USB,8,65.00,520.00,2026-02-03,Carlos R.,Norte,Online,Completado
