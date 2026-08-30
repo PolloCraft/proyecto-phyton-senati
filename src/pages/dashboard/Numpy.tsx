@@ -47,7 +47,7 @@ function formatStatValue(val: any): string {
   return String(val);
 }
 
-function parseResult(raw: string, section: Section): ParsedResult {
+function parseResult(raw: string, _section: Section): ParsedResult {
   if (raw.startsWith("Error:")) {
     return { title: "Error", sections: [{ label: "Detalle", items: [{ key: "Mensaje", value: raw.replace("Error: ", "") }] }] };
   }
