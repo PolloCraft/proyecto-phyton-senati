@@ -1,4 +1,8 @@
-import { randomInt } from "crypto";
+import { randomInt, createHmac } from "crypto";
+
+const JWT_SECRET = process.env.JWT_SECRET || "sisit-" + (process.env.EMAIL_PASS || "fallback-dev-secret");
+const JWT_EXPIRES_MS = 7 * 24 * 60 * 60 * 1000;
+const TURNSTILE_SECRET = process.env.TURNSTILE_SECRET_KEY;
 
 let redis = null;
 
@@ -59,6 +63,34 @@ async function addUser(user) {
   await saveUsers(users);
 }
 
+function generateToken(email, name) {
+  const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url");
+  const payload = { email, name, iat: Date.now(), exp: Date.now() + JWT_EXPIRES_MS };
+  const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  const signature = createHmac("sha256", JWT_SECRET).update(`${header}.${body}`).digest("base64url");
+  return `${header}.${body}.${signature}`;
+}
+
+function verifyToken(token) {
+  try {
+    const [header, body, signature] = token.split(".");
+    const expected = createHmac("sha256", JWT_SECRET).update(`${header}.${body}`).digest("base64url");
+    if (signature !== expected) return null;
+    const payload = JSON.parse(Buffer.from(body, "base64url").toString());
+    if (payload.exp < Date.now()) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+function authMiddleware(req) {
+  const auth = req.headers?.authorization || req.headers?.Authorization;
+  if (!auth || !auth.startsWith("Bearer ")) return null;
+  const token = auth.slice(7);
+  return verifyToken(token);
+}
+
 async function sendEmail(to, subject, html) {
   const mod = await import("nodemailer");
   const nodemailer = mod.default;
@@ -74,27 +106,6 @@ async function sendEmail(to, subject, html) {
     to,
     subject,
     html,
-  });
-}
-
-function json(res, status, data) {
-  res.writeHead(status, {
-    "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
-  });
-  res.end(JSON.stringify(data));
-}
-
-function readBody(req) {
-  return new Promise((resolve) => {
-    let body = "";
-    req.on("data", (c) => (body += c));
-    req.on("end", () => {
-      try { resolve(JSON.parse(body)); }
-      catch { resolve({}); }
-    });
   });
 }
 
@@ -116,13 +127,70 @@ function verificationEmailHTML(name, code) {
   `;
 }
 
+async function verifyTurnstile(token, ip) {
+  if (!TURNSTILE_SECRET) return true;
+  if (!token) return false;
+  try {
+    const resp = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ secret: TURNSTILE_SECRET, response: token, remoteip: ip || "" }),
+    });
+    const result = await resp.json();
+    return result.success === true;
+  } catch {
+    return false;
+  }
+}
+
+const rateLimitStore = new Map();
+
+function checkRateLimit(key, maxAttempts, windowMs) {
+  const now = Date.now();
+  const entry = rateLimitStore.get(key);
+  if (!entry || now - entry.start > windowMs) {
+    rateLimitStore.set(key, { start: now, count: 1 });
+    return { allowed: true, remaining: maxAttempts - 1 };
+  }
+  entry.count++;
+  if (entry.count > maxAttempts) {
+    const retryAfter = Math.ceil((windowMs - (now - entry.start)) / 1000);
+    return { allowed: false, remaining: 0, retryAfter };
+  }
+  return { allowed: true, remaining: maxAttempts - entry.count };
+}
+
+function corsHeaders() {
+  return {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type,Authorization",
+  };
+}
+
+function securityHeaders() {
+  return {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "X-XSS-Protection": "1; mode=block",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+  };
+}
+
+function readBody(req) {
+  return new Promise((resolve) => {
+    let body = "";
+    req.on("data", (c) => (body += c));
+    req.on("end", () => {
+      try { resolve(JSON.parse(body)); }
+      catch { resolve({}); }
+    });
+  });
+}
+
 export default async function handler(req, res) {
   if (req.method === "OPTIONS") {
-    res.writeHead(204, {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    });
+    res.writeHead(204, corsHeaders());
     return res.end();
   }
 
@@ -132,75 +200,139 @@ export default async function handler(req, res) {
   try {
     if (pathname === "/api/health" && req.method === "GET") {
       const REDIS_URL = process.env.REDIS_URL;
-      return json(res, 200, { status: "ok", storage: REDIS_URL ? "redis" : "none" });
+      res.writeHead(200, { "Content-Type": "application/json", ...corsHeaders(), ...securityHeaders() });
+      return res.end(JSON.stringify({ status: "ok", storage: REDIS_URL ? "redis" : "none" }));
     }
 
     if (pathname === "/api/register" && req.method === "POST") {
-      const { name, email: rawEmail } = await readBody(req);
+      const { name, email: rawEmail, turnstileToken } = await readBody(req);
       const email = (rawEmail || "").trim().toLowerCase();
-      if (!name || !email) return json(res, 400, { error: "Nombre y correo son requeridos." });
+      if (!name || !email) {
+        res.writeHead(400, { "Content-Type": "application/json", ...corsHeaders(), ...securityHeaders() });
+        return res.end(JSON.stringify({ error: "Nombre y correo son requeridos." }));
+      }
+
+      const turnstileOk = await verifyTurnstile(turnstileToken, req.headers?.["x-forwarded-for"] || "");
+      if (!turnstileOk) {
+        res.writeHead(403, { "Content-Type": "application/json", ...corsHeaders(), ...securityHeaders() });
+        return res.end(JSON.stringify({ error: "Verificacion anti-bot fallida. Intenta de nuevo." }));
+      }
+
       const existing = await findUser(email);
-      if (existing) return json(res, 400, { error: "Este correo ya esta registrado." });
+      if (existing) {
+        res.writeHead(400, { "Content-Type": "application/json", ...corsHeaders(), ...securityHeaders() });
+        return res.end(JSON.stringify({ error: "Este correo ya esta registrado." }));
+      }
 
       const code = String(randomInt(100000, 999999));
       await addUser({ name, email, code, verified: false });
 
       try {
-        await sendEmail(
-          email,
-          "Codigo de verificacion - Sistema Integral",
-          verificationEmailHTML(name, code)
-        );
-        return json(res, 200, { message: "Codigo enviado a tu correo electronico." });
+        await sendEmail(email, "Codigo de verificacion - Sistema Integral", verificationEmailHTML(name, code));
+        res.writeHead(200, { "Content-Type": "application/json", ...corsHeaders(), ...securityHeaders() });
+        return res.end(JSON.stringify({ message: "Codigo enviado a tu correo electronico." }));
       } catch (e) {
         console.error("Email send failed:", e.message);
-        return json(res, 500, { error: "No se pudo enviar el correo. Intenta de nuevo." });
+        res.writeHead(500, { "Content-Type": "application/json", ...corsHeaders(), ...securityHeaders() });
+        return res.end(JSON.stringify({ error: "No se pudo enviar el correo. Intenta de nuevo." }));
       }
     }
 
     if (pathname === "/api/verify-code" && req.method === "POST") {
       const { email: rawEmail, code } = await readBody(req);
       const email = (rawEmail || "").trim().toLowerCase();
+
+      const rl = checkRateLimit(`verify:${email}`, 5, 60000);
+      if (!rl.allowed) {
+        res.writeHead(429, { "Content-Type": "application/json", ...corsHeaders(), ...securityHeaders() });
+        return res.end(JSON.stringify({ error: `Demasiados intentos. Espera ${rl.retryAfter} segundos.` }));
+      }
+
       const user = await findUser(email);
-      if (!user) return json(res, 404, { error: "Usuario no encontrado." });
-      if (user.code !== code) return json(res, 400, { error: "Codigo incorrecto." });
+      if (!user) {
+        res.writeHead(404, { "Content-Type": "application/json", ...corsHeaders(), ...securityHeaders() });
+        return res.end(JSON.stringify({ error: "Usuario no encontrado." }));
+      }
+      if (user.code !== code) {
+        res.writeHead(400, { "Content-Type": "application/json", ...corsHeaders(), ...securityHeaders() });
+        return res.end(JSON.stringify({ error: "Codigo incorrecto." }));
+      }
       await updateUser(email, { verified: true });
-      return json(res, 200, { message: "Verificado correctamente." });
+
+      const token = generateToken(email, user.name);
+      res.writeHead(200, { "Content-Type": "application/json", ...corsHeaders(), ...securityHeaders() });
+      return res.end(JSON.stringify({ message: "Verificado correctamente.", token, user: { name: user.name, email } }));
     }
 
     if (pathname === "/api/login" && req.method === "POST") {
-      const { email: rawEmail } = await readBody(req);
+      const { email: rawEmail, turnstileToken } = await readBody(req);
       const email = (rawEmail || "").trim().toLowerCase();
+
+      const turnstileOk = await verifyTurnstile(turnstileToken, req.headers?.["x-forwarded-for"] || "");
+      if (!turnstileOk) {
+        res.writeHead(403, { "Content-Type": "application/json", ...corsHeaders(), ...securityHeaders() });
+        return res.end(JSON.stringify({ error: "Verificacion anti-bot fallida. Intenta de nuevo." }));
+      }
+
       const user = await findUser(email);
-      if (!user) return json(res, 404, { error: "Correo no registrado. Registrate primero." });
-      if (!user.verified) return json(res, 403, { error: "Cuenta no verificada. Verifica tu codigo." });
-      return json(res, 200, { message: "Inicio de sesion exitoso." });
+      if (!user) {
+        res.writeHead(404, { "Content-Type": "application/json", ...corsHeaders(), ...securityHeaders() });
+        return res.end(JSON.stringify({ error: "Correo no registrado. Registrate primero." }));
+      }
+      if (!user.verified) {
+        res.writeHead(403, { "Content-Type": "application/json", ...corsHeaders(), ...securityHeaders() });
+        return res.end(JSON.stringify({ error: "Cuenta no verificada. Verifica tu codigo." }));
+      }
+
+      const token = generateToken(email, user.name);
+      res.writeHead(200, { "Content-Type": "application/json", ...corsHeaders(), ...securityHeaders() });
+      return res.end(JSON.stringify({ message: "Inicio de sesion exitoso.", token, user: { name: user.name, email } }));
     }
 
     if (pathname === "/api/resend-code" && req.method === "POST") {
       const { email: rawEmail } = await readBody(req);
       const email = (rawEmail || "").trim().toLowerCase();
+
+      const rl = checkRateLimit(`resend:${email}`, 3, 60000);
+      if (!rl.allowed) {
+        res.writeHead(429, { "Content-Type": "application/json", ...corsHeaders(), ...securityHeaders() });
+        return res.end(JSON.stringify({ error: `Demasiados intentos. Espera ${rl.retryAfter} segundos.` }));
+      }
+
       const user = await findUser(email);
-      if (!user) return json(res, 404, { error: "Usuario no encontrado." });
+      if (!user) {
+        res.writeHead(404, { "Content-Type": "application/json", ...corsHeaders(), ...securityHeaders() });
+        return res.end(JSON.stringify({ error: "Usuario no encontrado." }));
+      }
 
       const code = String(randomInt(100000, 999999));
       await updateUser(email, { code });
 
       try {
-        await sendEmail(
-          email,
-          "Nuevo codigo de verificacion - Sistema Integral",
-          verificationEmailHTML(user.name, code)
-        );
-        return json(res, 200, { message: "Nuevo codigo enviado a tu correo electronico." });
+        await sendEmail(email, "Nuevo codigo de verificacion - Sistema Integral", verificationEmailHTML(user.name, code));
+        res.writeHead(200, { "Content-Type": "application/json", ...corsHeaders(), ...securityHeaders() });
+        return res.end(JSON.stringify({ message: "Nuevo codigo enviado a tu correo electronico." }));
       } catch (e) {
         console.error("Email send failed:", e.message);
-        return json(res, 500, { error: "No se pudo enviar el correo. Intenta de nuevo." });
+        res.writeHead(500, { "Content-Type": "application/json", ...corsHeaders(), ...securityHeaders() });
+        return res.end(JSON.stringify({ error: "No se pudo enviar el correo. Intenta de nuevo." }));
       }
     }
 
-    return json(res, 404, { error: "Not found" });
+    if (pathname === "/api/me" && req.method === "GET") {
+      const user = authMiddleware(req);
+      if (!user) {
+        res.writeHead(401, { "Content-Type": "application/json", ...corsHeaders(), ...securityHeaders() });
+        return res.end(JSON.stringify({ error: "Token invalido o expirado." }));
+      }
+      res.writeHead(200, { "Content-Type": "application/json", ...corsHeaders(), ...securityHeaders() });
+      return res.end(JSON.stringify({ user: { name: user.name, email: user.email } }));
+    }
+
+    res.writeHead(404, { "Content-Type": "application/json", ...corsHeaders(), ...securityHeaders() });
+    return res.end(JSON.stringify({ error: "Not found" }));
   } catch (e) {
-    return json(res, 500, { error: e.message });
+    res.writeHead(500, { "Content-Type": "application/json", ...corsHeaders(), ...securityHeaders() });
+    return res.end(JSON.stringify({ error: e.message }));
   }
 }
