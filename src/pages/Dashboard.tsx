@@ -22,7 +22,6 @@ function Dashboard() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [profile, setProfile] = useState<UserProfile>({ nombre: "", rol: "analista", institucion: "SENATI", avatar: null });
-  const [profileLoaded, setProfileLoaded] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -31,9 +30,8 @@ function Dashboard() {
       .then((r) => r.json())
       .then((data) => {
         if (data.profile) setProfile(data.profile);
-        setProfileLoaded(true);
       })
-      .catch(() => setProfileLoaded(true));
+      .catch(() => {});
   }, [token, getAuthHeaders]);
 
   useEffect(() => {
