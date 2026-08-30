@@ -22,7 +22,7 @@ export default function Turnstile({ onVerify, onExpire }: TurnstileProps) {
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
 
-  const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY as string;
+  const siteKey = "0x4AAAAAAEhpe3UsjnvRf7I0";
 
   useEffect(() => {
     if (!siteKey || !containerRef.current) return;
