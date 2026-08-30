@@ -299,6 +299,29 @@ const server = createServer(async (req, res) => {
       return json(res, 200, { user: { name: user.name, email: user.email } });
     }
 
+    if (pathname === "/api/profile" && req.method === "GET") {
+      const user = authMiddleware(req);
+      if (!user) return json(res, 401, { error: "Token invalido o expirado." });
+      const dbUser = await findUser(user.email);
+      if (!dbUser) return json(res, 404, { error: "Usuario no encontrado." });
+      const { nombre, rol, institucion, avatar } = dbUser;
+      return json(res, 200, { profile: { nombre: nombre || "", rol: rol || "analista", institucion: institucion || "SENATI", avatar: avatar || null } });
+    }
+
+    if (pathname === "/api/profile" && req.method === "PUT") {
+      const user = authMiddleware(req);
+      if (!user) return json(res, 401, { error: "Token invalido o expirado." });
+      const body = await readBody(req);
+      const { nombre, rol, institucion, avatar } = body;
+      const updates = {};
+      if (nombre !== undefined) updates.nombre = nombre;
+      if (rol !== undefined) updates.rol = rol;
+      if (institucion !== undefined) updates.institucion = institucion;
+      if (avatar !== undefined) updates.avatar = avatar;
+      await updateUser(user.email, updates);
+      return json(res, 200, { message: "Perfil actualizado." });
+    }
+
     return json(res, 404, { error: "Not found" });
   } catch (e) {
     return json(res, 500, { error: e.message });

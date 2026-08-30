@@ -11,25 +11,30 @@ interface UserProfile {
   avatar: string | null;
 }
 
+const API_URL = import.meta.env.VITE_API_URL || "";
+
 function Dashboard() {
-  const { email, logout } = useAuth();
-  const { info, success } = useToast();
+  const { email, token, logout, getAuthHeaders } = useAuth();
+  const { info, success, error: toastError } = useToast();
   const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [profile, setProfile] = useState<UserProfile>(() => {
-    const saved = localStorage.getItem(`userProfile_${email}`);
-    return saved ? JSON.parse(saved) : { nombre: "", rol: "analista", institucion: "SENATI", avatar: null };
-  });
+  const [profile, setProfile] = useState<UserProfile>({ nombre: "", rol: "analista", institucion: "SENATI", avatar: null });
+  const [profileLoaded, setProfileLoaded] = useState(false);
   const avatarInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem(`userProfile_${email}`);
-    if (saved) setProfile(JSON.parse(saved));
-    else setProfile({ nombre: "", rol: "analista", institucion: "SENATI", avatar: null });
-  }, [email]);
+    if (!token) return;
+    fetch(`${API_URL}/api/profile`, { headers: getAuthHeaders() })
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.profile) setProfile(data.profile);
+        setProfileLoaded(true);
+      })
+      .catch(() => setProfileLoaded(true));
+  }, [token, getAuthHeaders]);
 
   useEffect(() => {
     document.body.style.overflow = "";
@@ -64,10 +69,10 @@ function Dashboard() {
 
   const handleLogout = () => {
     setIsLoggingOut(true);
-    info("Cerrando sesión", "Redirigiendo a la página de inicio...");
+    info("Cerrando sesion", "Redirigiendo a la pagina de inicio...");
     setTimeout(() => {
       logout();
-      success("Sesión cerrada", "Has cerrado sesión correctamente");
+      success("Sesion cerrada", "Has cerrado sesion correctamente");
       navigate("/Login");
     }, 800);
   };
@@ -85,24 +90,40 @@ function Dashboard() {
       return;
     }
     const reader = new FileReader();
-    reader.onload = () => {
+    reader.onload = async () => {
       const base64 = reader.result as string;
       const updated = { ...profile, avatar: base64 };
       setProfile(updated);
-      localStorage.setItem(`userProfile_${email}`, JSON.stringify(updated));
-      success("Avatar actualizado", "Tu imagen de perfil se ha cambiado.");
+      try {
+        await fetch(`${API_URL}/api/profile`, {
+          method: "PUT",
+          headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+          body: JSON.stringify({ avatar: base64 }),
+        });
+        success("Avatar actualizado", "Tu imagen de perfil se ha cambiado.");
+      } catch {
+        toastError("Error", "No se pudo guardar el avatar en el servidor.");
+      }
     };
     reader.readAsDataURL(file);
   };
 
-  const saveProfile = () => {
+  const saveProfile = async () => {
     const nombre = (document.getElementById("profile-nombre") as HTMLInputElement)?.value || "";
     const rol = (document.getElementById("profile-rol") as HTMLSelectElement)?.value || "analista";
     const institucion = (document.getElementById("profile-institucion") as HTMLInputElement)?.value || "";
     const updated = { ...profile, nombre, rol, institucion };
     setProfile(updated);
-    localStorage.setItem(`userProfile_${email}`, JSON.stringify(updated));
-    success("Perfil guardado", "Los cambios se guardaron correctamente.");
+    try {
+      await fetch(`${API_URL}/api/profile`, {
+        method: "PUT",
+        headers: { ...getAuthHeaders(), "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre, rol, institucion }),
+      });
+      success("Perfil guardado", "Los cambios se guardaron correctamente.");
+    } catch {
+      toastError("Error", "No se pudo guardar el perfil en el servidor.");
+    }
     setShowProfileModal(false);
   };
 
@@ -197,7 +218,7 @@ function Dashboard() {
             </div>
           </NavLink>
 
-          {!sidebarCollapsed && <span className="sidebar-section-label">Análisis Numérico</span>}
+          {!sidebarCollapsed && <span className="sidebar-section-label">Analisis Numerico</span>}
 
           <NavLink
             to="/Dashboard/numpy"
@@ -228,8 +249,8 @@ function Dashboard() {
               </svg>
             </div>
             <div className="sidebar-link-text">
-              <span className="sidebar-link-name">Gráficos</span>
-              <span className="sidebar-link-desc">Visualización</span>
+              <span className="sidebar-link-name">Graficos</span>
+              <span className="sidebar-link-desc">Visualizacion</span>
             </div>
           </NavLink>
         </nav>
@@ -288,7 +309,6 @@ function Dashboard() {
         </div>
       </aside>
 
-      {/* Profile Modal */}
       {showProfileModal && (
         <div className="modal-overlay" onClick={() => setShowProfileModal(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
@@ -344,7 +364,6 @@ function Dashboard() {
         </div>
       )}
 
-      {/* Logout Loading Overlay */}
       {isLoggingOut && (
         <div className="logout-overlay">
           <div className="logout-loading">

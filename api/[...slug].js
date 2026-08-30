@@ -329,6 +329,40 @@ export default async function handler(req, res) {
       return res.end(JSON.stringify({ user: { name: user.name, email: user.email } }));
     }
 
+    if (pathname === "/api/profile" && req.method === "GET") {
+      const user = authMiddleware(req);
+      if (!user) {
+        res.writeHead(401, { "Content-Type": "application/json", ...corsHeaders(), ...securityHeaders() });
+        return res.end(JSON.stringify({ error: "Token invalido o expirado." }));
+      }
+      const dbUser = await findUser(user.email);
+      if (!dbUser) {
+        res.writeHead(404, { "Content-Type": "application/json", ...corsHeaders(), ...securityHeaders() });
+        return res.end(JSON.stringify({ error: "Usuario no encontrado." }));
+      }
+      const { nombre, rol, institucion, avatar } = dbUser;
+      res.writeHead(200, { "Content-Type": "application/json", ...corsHeaders(), ...securityHeaders() });
+      return res.end(JSON.stringify({ profile: { nombre: nombre || "", rol: rol || "analista", institucion: institucion || "SENATI", avatar: avatar || null } }));
+    }
+
+    if (pathname === "/api/profile" && req.method === "PUT") {
+      const user = authMiddleware(req);
+      if (!user) {
+        res.writeHead(401, { "Content-Type": "application/json", ...corsHeaders(), ...securityHeaders() });
+        return res.end(JSON.stringify({ error: "Token invalido o expirado." }));
+      }
+      const body = await readBody(req);
+      const { nombre, rol, institucion, avatar } = body;
+      const updates = {};
+      if (nombre !== undefined) updates.nombre = nombre;
+      if (rol !== undefined) updates.rol = rol;
+      if (institucion !== undefined) updates.institucion = institucion;
+      if (avatar !== undefined) updates.avatar = avatar;
+      await updateUser(user.email, updates);
+      res.writeHead(200, { "Content-Type": "application/json", ...corsHeaders(), ...securityHeaders() });
+      return res.end(JSON.stringify({ message: "Perfil actualizado." }));
+    }
+
     res.writeHead(404, { "Content-Type": "application/json", ...corsHeaders(), ...securityHeaders() });
     return res.end(JSON.stringify({ error: "Not found" }));
   } catch (e) {
