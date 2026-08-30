@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, useCallback, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthForm from "../components/auth/AuthForm";
 import FormField from "../components/auth/FormField";
@@ -11,6 +11,14 @@ function Registro() {
   const [loading, setLoading] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState("");
   const navigate = useNavigate();
+
+  const handleTurnstileVerify = useCallback((token: string) => {
+    setTurnstileToken(token);
+  }, []);
+
+  const handleTurnstileExpire = useCallback(() => {
+    setTurnstileToken("");
+  }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -59,7 +67,7 @@ function Registro() {
     >
       <FormField id="name" label="Nombre completo" placeholder="Tu nombre" value={name} onChange={setName} autoComplete="name" />
       <FormField id="email" label="Correo electronico" type="email" placeholder="tu@correo.com" value={email} onChange={setEmail} autoComplete="email" />
-      <Turnstile onVerify={setTurnstileToken} onExpire={() => setTurnstileToken("")} />
+      <Turnstile onVerify={handleTurnstileVerify} onExpire={handleTurnstileExpire} />
     </AuthForm>
   );
 }

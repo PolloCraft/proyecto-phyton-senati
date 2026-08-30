@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, useCallback, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useToast } from "../context/ToastContext";
@@ -13,6 +13,14 @@ function Login() {
   const { login } = useAuth();
   const { error: toastError, loading: toastLoading } = useToast();
   const navigate = useNavigate();
+
+  const handleTurnstileVerify = useCallback((token: string) => {
+    setTurnstileToken(token);
+  }, []);
+
+  const handleTurnstileExpire = useCallback(() => {
+    setTurnstileToken("");
+  }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -73,7 +81,7 @@ function Login() {
       linkTo="/Registro"
     >
       <FormField id="email" label="Correo electronico" type="email" placeholder="tu@correo.com" value={email} onChange={setEmail} autoComplete="email" />
-      <Turnstile onVerify={setTurnstileToken} onExpire={() => setTurnstileToken("")} />
+      <Turnstile onVerify={handleTurnstileVerify} onExpire={handleTurnstileExpire} />
     </AuthForm>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 
 declare global {
   interface Window {
@@ -21,77 +21,67 @@ export default function Turnstile({ onVerify, onExpire }: TurnstileProps) {
   const widgetIdRef = useRef<string>("");
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(false);
+  const onVerifyRef = useRef(onVerify);
+  const onExpireRef = useRef(onExpire);
+
+  onVerifyRef.current = onVerify;
+  onExpireRef.current = onExpire;
 
   const siteKey = "0x4AAAAAAEhpe3UsjnvRf7I0";
 
   useEffect(() => {
-    if (!siteKey || !containerRef.current) return;
+    if (!containerRef.current || widgetIdRef.current) return;
 
-    let timeout: ReturnType<typeof setTimeout>;
     let interval: ReturnType<typeof setInterval>;
+    let timeout: ReturnType<typeof setTimeout>;
 
     const tryRender = () => {
-      if (window.turnstile && containerRef.current) {
+      if (window.turnstile && containerRef.current && !widgetIdRef.current) {
         clearInterval(interval);
         try {
           widgetIdRef.current = window.turnstile.render(containerRef.current, {
             sitekey: siteKey,
             callback: (token: string) => {
               setLoaded(true);
-              onVerify(token);
+              onVerifyRef.current(token);
             },
-            "expired-callback": () => onExpire?.(),
-            "error-callback": () => {
-              setError(true);
-            },
+            "expired-callback": () => onExpireRef.current?.(),
+            "error-callback": () => setError(true),
             theme: "light",
             size: "normal",
           });
           setLoaded(true);
-        } catch (e) {
-          console.error("Turnstile render error:", e);
+        } catch {
           setError(true);
         }
       }
     };
 
     interval = setInterval(tryRender, 300);
-
     timeout = setTimeout(() => {
-      if (!loaded) {
-        clearInterval(interval);
-        setError(true);
-      }
+      if (!loaded) { clearInterval(interval); setError(true); }
     }, 10000);
 
     return () => {
       clearInterval(interval);
       clearTimeout(timeout);
-      if (widgetIdRef.current && window.turnstile) {
-        try { window.turnstile.remove(widgetIdRef.current); } catch {}
-      }
     };
-  }, [siteKey, onVerify, onExpire]);
+  }, []);
 
-  if (!siteKey) {
-    return (
-      <div style={{ padding: "8px", background: "#fef2f2", borderRadius: 8, fontSize: 12, color: "#dc2626" }}>
-        Turnstile no configurado (site key faltante)
-      </div>
-    );
-  }
+  const handleRetry = useCallback(() => {
+    setError(false);
+    setLoaded(false);
+    widgetIdRef.current = "";
+    if (containerRef.current && window.turnstile) {
+      try { window.turnstile.remove(widgetIdRef.current); } catch {}
+    }
+  }, []);
 
   if (error) {
     return (
       <div style={{ padding: "12px", background: "#fef2f2", borderRadius: 8, fontSize: 13, color: "#dc2626", textAlign: "center" }}>
         Error al cargar verificacion.{" "}
-        <button
-          onClick={() => {
-            setError(false);
-            setLoaded(false);
-          }}
-          style={{ background: "none", border: "none", color: "#6366f1", textDecoration: "underline", cursor: "pointer", fontSize: 13 }}
-        >
+        <button onClick={handleRetry} style={{ background: "none", border: "none", color: "#6366f1", textDecoration: "underline", cursor: "pointer", fontSize: 13 }}>
           Reintentar
         </button>
       </div>
